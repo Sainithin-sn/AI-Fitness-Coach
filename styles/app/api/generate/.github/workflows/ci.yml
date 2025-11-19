@@ -1,0 +1,48 @@
+name: CI
+
+# Run on pushes and pull requests to any branch
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      # Prevent accidental leaking of secrets during build logs
+      NODE_ENV: production
+
+    steps:
+      # 1) Checkout repository code
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2) Set up Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"          # built-in caching for npm (fast)
+
+      # 3) Install dependencies
+      - name: Install dependencies
+        run: npm ci
+        # npm ci is deterministic and uses package-lock.json. It fails if lockfile doesn't match package.json.
+
+      # 4) Build the Next.js app
+      - name: Build
+        run: npm run build
+
+      # 5) Optionally run lint/tests (uncomment if you add tests/lint)
+      # - name: Lint
+      #   run: npm run lint
+
+      # 6) (Optional) Upload build artifact for debugging or reuse
+      - name: Upload build artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: next-build
+          path: .next
